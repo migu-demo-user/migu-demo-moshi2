@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>潘多拉 · 小跃 · 模式二体验Demo</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#0E1016; color:#E2E8F0; font-family:"PingFang SC","Helvetica Neue",Arial,sans-serif; min-height:100vh; display:flex; flex-direction:column; }
+
+/* ── 顶部标签 */
+.mode-badge {
+  background: linear-gradient(90deg, #1A1F2E, #1E2435);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  padding: 10px 20px;
+  display: flex; align-items: center; gap: 10px;
+  font-size: 12px; color: #9AA5B4;
+}
+.mode-badge .badge {
+  background: #2D4A8A; color: #93C5FD;
+  padding: 3px 10px; border-radius: 20px;
+  font-size: 11px; font-weight: 500;
+}
+.mode-badge .rights { margin-left: auto; color: #10B981; font-size: 11px; }
+
+/* ── 主体布局 */
+.main { display: flex; flex: 1; gap: 0; overflow: hidden; }
+
+/* ── 左侧小跃对话区 */
+.chat-panel {
+  width: 380px; flex-shrink: 0;
+  display: flex; flex-direction: column;
+  background: #12151E;
+  border-right: 1px solid rgba(255,255,255,0.06);
+}
+.chat-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  display: flex; align-items: center; gap: 10px;
+}
+.avatar { width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#5B4FCF,#3B82F6);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff; flex-shrink:0; }
+.chat-name { font-size:14px;font-weight:500;color:#F3F4F6; }
+.chat-sub { font-size:11px;color:#6B7280; margin-top:1px; }
+
+.messages { flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:10px; }
+.msg { max-width:85%; }
+.msg.bot { align-self:flex-start; }
+.msg.user { align-self:flex-end; }
+.msg.bot .bubble {
+  background:#1E2435; border-radius:4px 12px 12px 12px;
+  padding:10px 14px; font-size:13px; color:#D1D5DB; line-height:1.5;
+}
+.msg.user .bubble {
+  background:linear-gradient(135deg,#5B4FCF,#4338CA);
+  border-radius:12px 4px 12px 12px;
+  padding:10px 14px; font-size:13px; color:#fff; line-height:1.5;
+}
+
+/* 播放卡片 */
+.music-card {
+  background: linear-gradient(135deg, #1A1D2E, #1E2040);
+  border: 1px solid rgba(91,79,207,0.2);
+  border-radius: 12px; padding: 14px;
+  width: 100%; max-width: 280px;
+}
+.music-card-inner { display:flex; align-items:center; gap:10px; margin-bottom:10px; position:relative; }
+.album-art { width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0; }
+.song-info { flex:1; min-width:0; }
+.song-title { font-size:13px;font-weight:500;color:#F3F4F6; white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.song-artist { font-size:11px;color:#7A8A9A; margin-top:2px; }
+.song-mode { font-size:10px;color:#93C5FD;background:rgba(59,130,246,0.1);padding:2px 6px;border-radius:4px;margin-top:3px;display:inline-block; }
+.fav-btn { width:28px;height:28px;border-radius:50%;background:transparent;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;flex-shrink:0; }
+.fav-btn i { font-size:16px;color:#4A5568;transition:all 0.2s; }
+.fav-btn:hover i { color:#9CA3AF; }
+.fav-btn.faved i { color:#F87171; }
+.progress-bar { height:3px;background:rgba(255,255,255,0.08);border-radius:2px;margin-bottom:10px;overflow:hidden; }
+.progress-fill { height:100%;background:linear-gradient(90deg,#5B4FCF,#3B82F6);border-radius:2px;width:0%;transition:width 0.3s; }
+.player-controls { display:flex;align-items:center;justify-content:center;gap:16px; }
+.player-controls i { font-size:16px;color:#6B7280;cursor:pointer;transition:color 0.2s; }
+.player-controls i:hover { color:#9CA3AF; }
+.play-btn { width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#5B4FCF,#4338CA);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s; }
+.play-btn i { font-size:14px;color:#fff; }
+
+/* 歌单卡片 */
+.playlist-tracks { margin:8px 0 0;border-top:1px solid rgba(255,255,255,0.06);padding-top:8px; }
+.playlist-track { display:flex;align-items:center;gap:8px;padding:5px 4px;border-radius:6px;cursor:pointer;transition:all 0.15s; }
+.playlist-track:hover { background:rgba(255,255,255,0.04); }
+.playlist-track.playing { background:rgba(91,79,207,0.15); }
+.track-num { font-size:11px;color:#4A5568;width:16px;text-align:center;flex-shrink:0; }
+.track-name { font-size:12px;color:#C8D0DC;flex:1; }
+.playlist-track.playing .track-name { color:#A78BFA; }
+.track-play { font-size:12px;color:#4A5568; }
+.play-all-row { border-top:1px solid rgba(255,255,255,0.06);margin-top:4px;padding-top:8px!important; }
+.play-all-row:hover { background:rgba(167,139,250,0.08)!important; }
+
+/* VIP */
+.vip-tag { display:inline-block;font-size:10px;font-weight:600;color:#F59E0B;background:rgba(245,158,11,0.12);padding:1px 5px;border-radius:3px;vertical-align:middle;margin-left:4px; }
+.paid-tip { font-size:10px;color:#92400E;margin-top:3px; }
+.vip-banner { display:flex;align-items:center;gap:8px;background:linear-gradient(90deg,rgba(245,158,11,0.12),rgba(245,158,11,0.06));border:1px solid rgba(245,158,11,0.2);border-radius:8px;padding:8px 12px;margin:6px 0;cursor:pointer;transition:all 0.2s; }
+.vip-banner:hover { background:linear-gradient(90deg,rgba(245,158,11,0.2),rgba(245,158,11,0.1)); }
+.vip-banner i { font-size:14px;color:#F59E0B; }
+.vip-banner span { font-size:12px;color:#D97706;flex:1; }
+.vip-banner-arrow { font-size:16px;color:#F59E0B; }
+
+/* thinking */
+.thinking { display:flex;gap:4px;align-items:center;padding:8px 0; }
+.thinking span { width:6px;height:6px;border-radius:50%;background:#5B4FCF;animation:bounce 1s ease-in-out infinite; }
+.thinking span:nth-child(2) { animation-delay:.2s; }
+.thinking span:nth-child(3) { animation-delay:.4s; }
+@keyframes bounce { 0%,80%,100%{transform:scale(0.6);opacity:0.4} 40%{transform:scale(1);opacity:1} }
+
+/* 输入区 */
+.input-area { padding:12px 16px; border-top:1px solid rgba(255,255,255,0.06); }
+.preset-grid { display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px; }
+.preset-btn { background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:7px 6px;font-size:11px;color:#9AA5B4;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:4px;white-space:nowrap; }
+.preset-btn:hover { background:rgba(255,255,255,0.08);color:#D1D5DB; }
+.preset-btn i { font-size:13px; }
+.input-row { display:flex;gap:8px; }
+input[type=text] { flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 14px;font-size:13px;color:#E2E8F0;outline:none;transition:all 0.2s; }
+input[type=text]:focus { border-color:rgba(91,79,207,0.4);background:rgba(255,255,255,0.08); }
+input[type=text]::placeholder { color:#4A5568; }
+.send-btn { width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#5B4FCF,#4338CA);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;flex-shrink:0; }
+.send-btn:hover { transform:scale(1.05); }
+.send-btn i { font-size:16px;color:#fff; }
+
+/* ── 右侧手机系统模拟区 */
+.system-panel {
+  flex:1; display:flex; flex-direction:column;
+  background: #0A0C12; padding: 20px;
+  overflow-y: auto;
+}
+.system-title { font-size:13px;color:#6B7280;margin-bottom:16px;font-weight:500; }
+
+/* 通知栏 */
+.notification-bar {
+  background: #1A1D28;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  transition: all 0.4s;
+  opacity: 0;
+  transform: translateY(-8px);
+}
+.notification-bar.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+.notif-header { font-size:10px;color:#6B7280;margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+.notif-header .app-icon { width:14px;height:14px;border-radius:3px;background:linear-gradient(135deg,#E91E8C,#FF5722);display:flex;align-items:center;justify-content:center; }
+.notif-header .app-icon i { font-size:8px;color:#fff; }
+.notif-music { display:flex;align-items:center;gap:10px; }
+.notif-art { width:36px;height:36px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px; }
+.notif-info { flex:1; }
+.notif-title { font-size:12px;font-weight:500;color:#E5E7EB; }
+.notif-artist { font-size:11px;color:#6B7280; }
+.notif-controls { display:flex;align-items:center;gap:10px; }
+.notif-controls i { font-size:16px;color:#9AA5B4;cursor:pointer; }
+
+/* 事件日志 */
+.event-log { margin-top:16px; }
+.event-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  font-size: 12px;
+  opacity: 0;
+  transform: translateX(10px);
+  transition: all 0.4s;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.05);
+}
+.event-item.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+.event-item.type-system { border-color: rgba(245,158,11,0.2); background: rgba(245,158,11,0.04); }
+.event-item.type-intent { border-color: rgba(91,79,207,0.2); background: rgba(91,79,207,0.04); }
+.event-item.type-play { border-color: rgba(16,185,129,0.2); background: rgba(16,185,129,0.04); }
+.event-item.type-notif { border-color: rgba(59,130,246,0.2); background: rgba(59,130,246,0.04); }
+.event-dot { width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:3px; }
+.type-system .event-dot { background:#F59E0B; }
+.type-intent .event-dot { background:#8B5CF6; }
+.type-play .event-dot { background:#10B981; }
+.type-notif .event-dot { background:#3B82F6; }
+.event-content { flex:1; color:#9AA5B4; line-height:1.5; }
+.event-content strong { color:#D1D5DB; }
+
+/* ── 弹窗 */
+.modal-mask {
+  display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,0.7); z-index:200;
+  align-items:center; justify-content:center;
+  backdrop-filter:blur(6px);
+}
+.modal-mask.show { display:flex; }
+
+/* 系统授权弹窗 */
+.auth-dialog {
+  background: #1E2230;
+  border-radius: 16px;
+  width: 300px;
+  padding: 24px;
+  animation: popIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes popIn { from{transform:scale(0.8);opacity:0} to{transform:scale(1);opacity:1} }
+.auth-icon { width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#E91E8C,#FF5722);display:flex;align-items:center;justify-content:center;margin:0 auto 14px; }
+.auth-icon i { font-size:28px;color:#fff; }
+.auth-title { font-size:15px;font-weight:600;color:#F3F4F6;text-align:center;margin-bottom:6px; }
+.auth-desc { font-size:12px;color:#6B7280;text-align:center;line-height:1.6;margin-bottom:20px; }
+.auth-perms { background:rgba(255,255,255,0.04);border-radius:10px;padding:12px;margin-bottom:16px; }
+.auth-perm { display:flex;align-items:center;gap:8px;font-size:12px;color:#9AA5B4;margin-bottom:6px; }
+.auth-perm:last-child { margin-bottom:0; }
+.auth-perm i { font-size:14px;color:#10B981; }
+.auth-tip { font-size:11px;color:#4A5568;text-align:center;margin-bottom:16px; }
+.auth-btns { display:flex;gap:8px; }
+.auth-btn { flex:1;padding:11px;border-radius:10px;border:none;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s; }
+.auth-deny { background:rgba(255,255,255,0.06);color:#9AA5B4; }
+.auth-allow { background:linear-gradient(135deg,#5B4FCF,#4338CA);color:#fff; }
+.auth-allow:hover { transform:scale(1.02); }
+
+/* 账号登录弹窗 */
+.login-sheet {
+  background: #1A1D2E;
+  border-radius: 20px 20px 0 0;
+  width: 375px; max-width: 100%;
+  padding: 0 0 32px;
+  animation: slideUp 0.35s cubic-bezier(0.16,1,0.3,1);
+  position: absolute; bottom:0;
+}
+@keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+.login-sheet-inner { position:relative; }
+.sheet-handle { width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:12px auto 20px; }
+.login-logo { text-align:center; margin-bottom:6px; }
+.login-logo .app-icon-lg { width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#E91E8C,#FF5722);display:inline-flex;align-items:center;justify-content:center; }
+.login-logo .app-icon-lg i { font-size:28px;color:#fff; }
+.login-title { font-size:16px;font-weight:600;color:#F3F4F6;text-align:center;margin-bottom:4px; }
+.login-sub { font-size:12px;color:#6B7280;text-align:center;margin-bottom:24px; }
+.login-tip { font-size:11px;color:#6B7280;text-align:center;margin:0 20px 16px; }
+.phone-input-row { display:flex;align-items:center;gap:8px;margin:0 20px 12px; }
+.phone-prefix { font-size:14px;color:#9AA5B4;padding:12px;background:rgba(255,255,255,0.04);border-radius:10px;border:1px solid rgba(255,255,255,0.08); }
+.phone-input { flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px;font-size:14px;color:#E5E7EB;outline:none; }
+.login-btn-primary { display:block; width:calc(100% - 40px);margin:0 20px;padding:13px;border-radius:10px;border:none;background:linear-gradient(135deg,#E91E8C,#FF5722);color:#fff;font-size:14px;font-weight:500;cursor:pointer; }
+.login-skip { font-size:12px;color:#6B7280;text-align:center;margin-top:12px;cursor:pointer;text-decoration:underline; }
+
+/* 会员弹窗 */
+.vip-mask { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:300;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px); }
+.vip-mask.show { display:flex; }
+.vip-sheet { background:#1A1D24;border-radius:20px 20px 0 0;width:375px;max-width:100%;padding:0 0 32px;animation:slideUp 0.3s cubic-bezier(0.16,1,0.3,1); }
+.vip-handle { width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:12px auto 16px; }
+.vip-title { font-size:16px;font-weight:600;color:#F3F4F6;text-align:center;margin-bottom:4px; }
+.vip-subtitle { font-size:12px;color:#6B7280;text-align:center;margin-bottom:20px; }
+.vip-card { margin:0 20px 12px;border-radius:12px;padding:14px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:10px; }
+.vip-card-green { background:linear-gradient(135deg,#1C2B1A,#0F2A1F);border:1px solid rgba(16,185,129,0.25); }
+.vip-card-blue { background:#111318;border:1px solid rgba(255,255,255,0.08); }
+.vip-card-icon { width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+.vip-card-info { flex:1; }
+.vip-card-name { font-size:14px;font-weight:500;color:#E5E7EB; }
+.vip-card-desc { font-size:11px;color:#6B7280;margin-top:2px; }
+.vip-price { font-size:12px;color:#60A5FA;background:rgba(59,130,246,0.1);padding:3px 10px;border-radius:12px;flex-shrink:0; }
+.vip-close-btn { display:block; width:calc(100% - 40px); margin:4px 20px 0;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:transparent;font-size:14px;color:#6B7280;cursor:pointer; }
+
+/* toast */
+.toast { position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(30,34,48,0.95);color:#E5E7EB;padding:10px 18px;border-radius:20px;font-size:13px;opacity:0;transition:all 0.3s;pointer-events:none;white-space:nowrap;z-index:500;border:1px solid rgba(255,255,255,0.08); }
+.toast.show { opacity:1;transform:translateX(-50%) translateY(0); }
+
+/* reset */
+.reset-btn { position:fixed;top:12px;right:16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:6px 12px;font-size:12px;color:#6B7280;cursor:pointer;transition:all 0.2s;z-index:100; }
+.reset-btn:hover { background:rgba(255,255,255,0.1);color:#9AA5B4; }
+
+/* 滚动条 */
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.1);border-radius:2px; }
+</style>
+</head>
+<body>
+
+<!-- 顶部模式标签 -->
+<div class="mode-badge">
+  <span class="badge">模式二 · 预装App后台调起</span>
+  <span>预装咪咕App → 小跃Intent后台唤起 → 全量版权曲库</span>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+    <span style="font-size:11px;color:#6B7280;">模拟用户状态：</span>
+    <button onclick="setGuest()" id="btnGuest" style="padding:4px 10px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:#9AA5B4;font-size:11px;cursor:pointer;">👤 访客体验</button>
+    <button onclick="setMember()" id="btnMember" style="padding:4px 10px;border-radius:12px;border:1px solid rgba(16,185,129,0.3);background:rgba(16,185,129,0.08);color:#10B981;font-size:11px;cursor:pointer;">✦ 购机会员</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- 左侧小跃对话 -->
+  <div class="chat-panel">
+    <div class="chat-header">
+      <div class="avatar">跃</div>
+      <div>
+        <div class="chat-name">小跃</div>
+        <div class="chat-sub">AI助手 · 潘多拉</div>
+      </div>
+    </div>
+
+    <div class="messages" id="messages">
+      <div class="msg bot">
+        <div class="bubble">嗨，我是小跃 👋 有什么需要帮你的？</div>
+      </div>
+    </div>
+
+    <div class="input-area">
+      <div class="preset-grid">
+        <button class="preset-btn" onclick="send('我想听周杰伦的歌')">
+          <i class="ti ti-music"></i>我想听周杰伦
+        </button>
+        <button class="preset-btn" onclick="send('来首适合专注工作的纯音乐')">
+          <i class="ti ti-brain"></i>专注工作
+        </button>
+        <button class="preset-btn" onclick="send('给我推荐热门榜单')">
+          <i class="ti ti-trending-up"></i>热门榜单
+        </button>
+        <button class="preset-btn" onclick="send('我心情不好想听伤感的歌')">
+          <i class="ti ti-cloud-rain"></i>心情不好
+        </button>
+        <button class="preset-btn" onclick="send('来首节奏感强的跑步音乐')">
+          <i class="ti ti-run"></i>跑步健身
+        </button>
+        <button class="preset-btn" onclick="send('来首睡前放松的轻音乐')">
+          <i class="ti ti-moon"></i>睡前放松
+        </button>
+      </div>
+      <div class="input-row">
+        <input type="text" id="userInput" placeholder="和小跃说话..." onkeydown="if(event.key==='Enter')send()"/>
+        <button class="send-btn" onclick="send()"><i class="ti ti-send"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 右侧系统模拟区 -->
+  <div class="system-panel">
+    <div class="system-title">系统层 · 模式二运行状态</div>
+
+    <!-- 通知栏音乐控制条 -->
+    <div class="notification-bar" id="notifBar">
+      <div class="notif-header">
+        <div class="app-icon"><i class="ti ti-music"></i></div>
+        <span>咪咕音乐 · 正在后台播放</span>
+      </div>
+      <div class="notif-music">
+        <div class="notif-art" id="notifArt">🎵</div>
+        <div class="notif-info">
+          <div class="notif-title" id="notifTitle">—</div>
+          <div class="notif-artist" id="notifArtist">—</div>
+        </div>
+        <div class="notif-controls">
+          <i class="ti ti-player-skip-back"></i>
+          <i class="ti ti-player-pause" id="notifPlayIcon"></i>
+          <i class="ti ti-player-skip-forward"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- 事件日志 -->
+    <div class="event-log" id="eventLog">
+      <div style="font-size:11px;color:#3A4050;margin-bottom:8px;">— 等待操作 —</div>
+    </div>
+  </div>
+</div>
+
+<!-- 系统授权弹窗 -->
+<div class="modal-mask" id="authMask">
+  <div class="auth-dialog">
+    <div class="auth-icon"><i class="ti ti-music"></i></div>
+    <div class="auth-title">「小跃」想要访问「咪咕音乐」</div>
+    <div class="auth-desc">允许后，小跃可以在后台调起咪咕音乐为你播放歌曲。</div>
+    <div class="auth-perms">
+      <div class="auth-perm"><i class="ti ti-check"></i>在后台播放咪咕音乐</div>
+      <div class="auth-perm"><i class="ti ti-check"></i>在通知栏显示播放控制</div>
+      <div class="auth-perm"><i class="ti ti-check"></i>访问你的咪咕账号信息</div>
+    </div>
+    <div class="auth-tip">此授权仅出现一次，后续播放无需再次确认</div>
+    <div class="auth-btns">
+      <button class="auth-btn auth-deny" onclick="denyAuth()">不允许</button>
+      <button class="auth-btn auth-allow" onclick="allowAuth()">允许</button>
+    </div>
+  </div>
+</div>
+
+<!-- 账号登录弹窗 -->
+<div class="modal-mask" id="loginMask" style="align-items:flex-end;justify-content:center;">
+  <div class="login-sheet">
+    <div class="sheet-handle"></div>
+    <div class="login-logo">
+      <div class="app-icon-lg"><i class="ti ti-music"></i></div>
+    </div>
+    <div class="login-title">登录咪咕音乐</div>
+    <div class="login-sub">首次使用需要登录账号，以便同步你的会员权益</div>
+    <div class="login-tip">已检测到购机会员权益，登录后自动激活，VIP歌曲直接畅听</div>
+    <div class="phone-input-row">
+      <div class="phone-prefix">+86</div>
+      <input class="phone-input" placeholder="请输入手机号" value="138****8888" readonly/>
+    </div>
+    <button class="login-btn-primary" onclick="doLogin()">一键登录</button>
+    <div class="login-skip" onclick="skipLogin()">暂不登录，继续试听</div>
+  </div>
+</div>
+
+<!-- 会员弹窗 -->
+<div class="vip-mask" id="vipMask" onclick="if(event.target===this)closeVip()">
+  <div class="vip-sheet">
+    <div class="vip-handle"></div>
+    <div class="vip-title">开通会员</div>
+    <div class="vip-subtitle">解锁全曲畅听权益</div>
+    <div class="vip-card vip-card-green" onclick="claimVip()">
+      <div class="vip-card-icon" style="background:rgba(16,185,129,0.15);">
+        <i class="ti ti-gift" style="font-size:18px;color:#10B981;"></i>
+      </div>
+      <div class="vip-card-info">
+        <div class="vip-card-name">免费领取会员权益</div>
+        <div class="vip-card-desc">购机专属权益，点击激活</div>
+      </div>
+      <i class="ti ti-chevron-right" style="color:#6B7280;font-size:18px;flex-shrink:0;"></i>
+    </div>
+    <div class="vip-card vip-card-blue" onclick="buyVip()">
+      <div class="vip-card-icon" style="background:rgba(59,130,246,0.15);">
+        <i class="ti ti-crown" style="font-size:18px;color:#60A5FA;"></i>
+      </div>
+      <div class="vip-card-info">
+        <div class="vip-card-name">开通会员</div>
+        <div class="vip-card-desc">解锁全部歌曲，畅听无限制</div>
+      </div>
+      <span class="vip-price">¥6/月</span>
+    </div>
+    <button class="vip-close-btn" onclick="closeVip()">稍后再说</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<button class="reset-btn" onclick="resetDemo()"><i class="ti ti-refresh"></i> 重置</button>
+
+<script>
+// ── 状态
+let authorized = false;
+let loggedIn = false;
+let hasVip = false;
+let guestMode = false;
+let pendingIntent = null;
+let progressTimer = null;
+
+// ── 数据
+const playlists = {
+  '周杰伦': { cover:'🎵', color:'#2D1B69', title:'周杰伦精选', desc:'收录 32 首 · 全量版权', tracks:['晴天','七里香','稻香','以父之名','夜曲','告白气球'] },
+  '热门':   { cover:'🔥', color:'#3D1A0A', title:'本周热歌榜', desc:'更新于今日 · 全量版权', tracks:['起风了','漠河舞厅','踏山河','白月光与朱砂痣','错位时空'] },
+};
+const songs = {
+  '专注': { emoji:'🎧', title:'Forest Rain', artist:'纯音乐', color:'#0A3D2E' },
+  '伤感': { emoji:'🌧️', title:'以父之名', artist:'周杰伦', color:'#1A1A3A', paid:true },
+  '运动': { emoji:'⚡', title:'Power Up', artist:'AI生成', color:'#3A1A0A' },
+  '放松': { emoji:'🌙', title:'Moonlight', artist:'纯音乐', color:'#0D1B3E' },
+};
+const labels = {
+  '周杰伦':'周董的歌，来了 ～ 🎵',
+  '热门':  '最近这些歌超火，快来听 🔥',
+  '专注':  '给你挑了首适合专注的曲子 🌊',
+  '伤感':  '心情不好的时候，音乐懂你 🌧️',
+  '运动':  '节奏拉满，冲冲冲！⚡',
+  '放松':  '放慢脚步，让音乐带你放松 🌙',
+};
+
+function detectIntent(text) {
+  if (text.includes('周杰伦')) return '周杰伦';
+  if (text.includes('热门') || text.includes('新歌') || text.includes('推荐') || text.includes('榜')) return '热门';
+  if (text.includes('专注') || text.includes('纯音乐') || text.includes('工作') || text.includes('学习')) return '专注';
+  if (text.includes('伤感') || text.includes('难过') || text.includes('失恋') || text.includes('心情不好')) return '伤感';
+  if (text.includes('运动') || text.includes('跑步') || text.includes('健身') || text.includes('节奏')) return '运动';
+  if (text.includes('睡前') || text.includes('放松') || text.includes('轻音乐') || text.includes('冥想')) return '放松';
+  return null;
+}
+
+// ── 发送消息
+function buildTracks(tracks, cover, color) {
+  return tracks.slice(0,4).map((t,i) =>
+    '<div class="playlist-track" onclick="playTrack(this,\'' + t + '\',\'' + cover + '\',\'' + color + '\')">' +
+    '<span class="track-num">' + (i+1) + '</span>' +
+    '<span class="track-name">' + t + '</span>' +
+    '<i class="ti ti-player-play track-play"></i>' +
+    '</div>'
+  ).join('');
+}
+
+function buildVipBanner(show) {
+  if (!show) return '';
+  return '<div class="vip-banner" onclick="openVip()">' +
+    '<i class="ti ti-crown"></i>' +
+    '<span>开通会员，畅听全部歌曲</span>' +
+    '<span class="vip-banner-arrow">›</span>' +
+    '</div>';
+}
+
+function send(preset) {
+  const input = document.getElementById('userInput');
+  const text = preset || input.value.trim();
+  if (!text) return;
+  input.value = '';
+
+  addMsg(text, 'user');
+  const intent = detectIntent(text);
+  if (!intent) {
+    setTimeout(() => addMsg('没太听明白，可以说「播放周杰伦」或者「来首轻音乐」😊', 'bot'), 800);
+    return;
+  }
+
+  addThinking();
+  addEvent('intent', `<strong>小跃识别意图：</strong>${labels[intent]}`);
+
+  if (!authorized) {
+    pendingIntent = intent;
+    setTimeout(() => {
+      removeThinking();
+      document.getElementById('authMask').classList.add('show');
+      addEvent('system', '<strong>系统授权弹窗</strong> · 首次使用，需要允许小跃访问咪咕音乐');
+    }, 1000);
+    return;
+  }
+
+  if (!loggedIn) {
+    pendingIntent = intent;
+    setTimeout(() => {
+      removeThinking();
+      document.getElementById('loginMask').classList.add('show');
+      addEvent('system', '<strong>账号登录</strong> · 首次播放需要登录咪咕账号');
+    }, 1000);
+    return;
+  }
+
+  setTimeout(() => runIntent(intent), 800);
+}
+
+function runIntent(intent) {
+  removeThinking();
+  addEvent('play', `<strong>Intent后台调起</strong> · 小跃向系统发送Intent，咪咕App在后台被唤起`);
+
+  const label = labels[intent];
+  addMsg(label, 'bot');
+
+  setTimeout(() => {
+    addMusicCard(intent);
+  }, 300);
+}
+
+// ── 授权
+function allowAuth() {
+  document.getElementById('authMask').classList.remove('show');
+  authorized = true;
+  addEvent('system', '<strong>授权成功</strong> · 小跃已获得访问咪咕音乐的权限(此后不再弹出)');
+  toast('已授权 ✓ 后续播放无需再次确认');
+
+  if (!loggedIn && pendingIntent) {
+    setTimeout(() => {
+      updateLoginModal();
+      document.getElementById('loginMask').classList.add('show');
+      addEvent('system', '<strong>账号登录</strong> · 首次播放需要登录咪咕账号');
+    }, 600);
+  } else if (pendingIntent) {
+    const intent = pendingIntent; pendingIntent = null;
+    addThinking();
+    setTimeout(() => runIntent(intent), 800);
+  }
+}
+
+function denyAuth() {
+  document.getElementById('authMask').classList.remove('show');
+  pendingIntent = null;
+  addMsg('好的，已取消。如需听歌，随时告诉我 😊', 'bot');
+  addEvent('system', '<strong>授权被拒绝</strong> · 无法后台调起咪咕音乐');
+}
+
+// ── 登录
+function doLogin() {
+  document.getElementById('loginMask').classList.remove('show');
+  loggedIn = true;
+  if (!guestMode) {
+    hasVip = true; // 购机会员权益自动激活
+    addEvent('system', '<strong>登录成功</strong> · 购机会员权益已激活，VIP歌曲直接畅听');
+    toast('登录成功，购机会员权益已激活 🎉');
+  } else {
+    hasVip = false;
+    addEvent('system', '<strong>登录成功</strong> · 以普通用户身份登录，VIP歌曲仅可试听30秒');
+    toast('登录成功');
+  }
+
+  if (pendingIntent) {
+    const intent = pendingIntent; pendingIntent = null;
+    addThinking();
+    setTimeout(() => runIntent(intent), 800);
+  }
+}
+
+function skipLogin() {
+  document.getElementById('loginMask').classList.remove('show');
+  loggedIn = true;
+  hasVip = false;
+  addEvent('system', '<strong>跳过登录</strong> · 访客模式，会员权益未激活');
+  addEvent('system', '<strong>提示</strong> · 访客模式，VIP歌曲仅可试听30秒，登录后可激活购机权益');
+
+  if (pendingIntent) {
+    const intent = pendingIntent; pendingIntent = null;
+    addThinking();
+    setTimeout(() => runIntent(intent), 800);
+  }
+}
+
+// ── 音乐卡片
+function addMusicCard(intent) {
+  const msgs = document.getElementById('messages');
+  const wrap = document.createElement('div');
+  wrap.className = 'msg bot';
+  const div = document.createElement('div');
+  div.className = 'music-card';
+
+  if (playlists[intent]) {
+    const pl = playlists[intent];
+    div.innerHTML = `
+      <div class="music-card-inner">
+        <div class="album-art" style="background:${pl.color}">${pl.cover}</div>
+        <div class="song-info">
+          <div class="song-title">${pl.title}</div>
+          <div class="song-artist">${pl.desc}</div>
+          <div class="song-mode">后台调起 · 全量版权</div>
+        </div>
+        <button class="fav-btn" onclick="toggleFav(this)"><i class="ti ti-heart"></i></button>
+      </div>
+      <div class="playlist-tracks">
+        ${buildTracks(pl.tracks, pl.cover, pl.color)}
+        <div class="playlist-track play-all-row" onclick="playAll('${pl.title}','${pl.cover}','${pl.color}')">
+          <span class="track-num"><i class="ti ti-player-play" style="font-size:11px;"></i></span>
+          <span class="track-name" style="color:#A78BFA;font-weight:500;">播放全部 ${pl.tracks.length} 首</span>
+          <i class="ti ti-shuffle" style="font-size:12px;color:#6B7280;"></i>
+        </div>
+      </div>
+      <div class="player-controls" style="margin-top:8px;border-top:1px solid rgba(255,255,255,0.06);padding-top:8px;">
+        <i class="ti ti-player-skip-back"></i>
+        <button class="play-btn" onclick="togglePlay()"><i class="ti ti-player-pause" id="playIcon"></i></button>
+        <i class="ti ti-player-skip-forward"></i>
+        <i class="ti ti-shuffle" style="font-size:16px;color:#7A8A9A;cursor:pointer;" onclick="toast('随机播放中 🔀')"></i>
+      </div>`;
+    updateNotif(pl.tracks[0], '多位艺术家', pl.cover, pl.color);
+  } else {
+    const song = songs[intent];
+    div.innerHTML = `
+      <div class="music-card-inner">
+        <div class="album-art" style="background:${song.color}">${song.emoji}</div>
+        <div class="song-info">
+          <div class="song-title">${song.title}${(song.paid&&!hasVip)?'<span class="vip-tag">VIP</span>':''}</div>
+          <div class="song-artist">${song.artist}</div>
+          <div class="song-mode">${(song.paid&&hasVip)?'后台调起 · 会员畅听 ✓':'后台调起 · 全量版权'}</div>
+          ${(song.paid&&!hasVip)?'<div class="paid-tip">试听30秒，开通会员畅听全曲</div>':''}
+        </div>
+        <button class="fav-btn" onclick="toggleFav(this)"><i class="ti ti-heart"></i></button>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progFill"></div></div>
+      ${buildVipBanner(song.paid && !hasVip)}
+      <div class="player-controls">
+        <i class="ti ti-player-skip-back"></i>
+        <button class="play-btn" onclick="togglePlay()"><i class="ti ti-player-pause" id="playIcon"></i></button>
+        <i class="ti ti-player-skip-forward"></i>
+      </div>`;
+    updateNotif(song.title, song.artist, song.emoji, song.color);
+    if (song.paid && hasVip) {
+      addEvent('play', '<strong>会员权益生效</strong> · VIP歌曲直接畅听，购机权益已激活');
+    } else if (song.paid && !hasVip) {
+      addEvent('play', '<strong>试听模式</strong> · VIP歌曲，访客仅可试听30秒');
+      setTimeout(() => {
+        const icon = document.getElementById('playIcon');
+        if (icon) icon.className = 'ti ti-player-play';
+        toast('试听结束，登录后可激活购机权益畅听全曲 🎵');
+        addEvent('system', '<strong>试听结束</strong> · 登录并激活购机权益可畅听全曲');
+      }, 8000); // demo里8秒模拟30秒试听
+    }
+    startProgress();
+  }
+
+  wrap.appendChild(div);
+  msgs.appendChild(wrap);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function updateNotif(title, artist, art, color) {
+  document.getElementById('notifTitle').textContent = title;
+  document.getElementById('notifArtist').textContent = artist;
+  document.getElementById('notifArt').textContent = art;
+  document.getElementById('notifArt').style.background = color;
+  document.getElementById('notifBar').classList.add('show');
+  addEvent('notif', `<strong>通知栏更新</strong> · 「${title}」正在后台播放`);
+}
+
+function playTrack(row, name, art, color) {
+  document.querySelectorAll('.playlist-track').forEach(r=>r.classList.remove('playing'));
+  row.classList.add('playing');
+  updateNotif(name, '点击播放', art, color);
+  toast(`正在播放：${name} 🎵`);
+}
+
+function playAll(title, art, color) {
+  updateNotif(title, '随机播放', art, color);
+  toast('已开始随机播放歌单 🔀');
+}
+
+function togglePlay() {
+  const icon = document.getElementById('playIcon');
+  if (!icon) return;
+  const isPlaying = icon.classList.contains('ti-player-pause');
+  icon.className = isPlaying ? 'ti ti-player-play' : 'ti ti-player-pause';
+  const notifIcon = document.getElementById('notifPlayIcon');
+  if (notifIcon) notifIcon.className = isPlaying ? 'ti ti-player-play' : 'ti ti-player-pause';
+}
+
+function toggleFav(btn) {
+  btn.classList.toggle('faved');
+  const isFaved = btn.classList.contains('faved');
+  btn.querySelector('i').className = isFaved ? 'ti ti-heart-filled' : 'ti ti-heart';
+  toast(isFaved ? '已加入小跃收藏 ❤️  可在小跃→我的收藏中查看' : '已取消收藏');
+}
+
+function updateLoginModal() {
+  const tip = document.querySelector('.login-tip');
+  const btn = document.querySelector('.login-btn-primary');
+  if (guestMode) {
+    if (tip) tip.textContent = '登录后可使用更多功能';
+    if (btn) btn.textContent = '一键登录';
+  } else {
+    if (tip) tip.textContent = '已检测到购机权益，登录后自动激活';
+    if (btn) btn.textContent = '一键登录并激活权益';
+  }
+}
+
+function openVip() { document.getElementById('vipMask').classList.add('show'); }
+function closeVip() { document.getElementById('vipMask').classList.remove('show'); }
+function claimVip() { closeVip(); toast('正在跳转激活页面，稍等片刻… 🎁'); }
+function buyVip() { closeVip(); toast('正在跳转开通页面… 🎵'); }
+
+function startProgress() {
+  if (progressTimer) clearInterval(progressTimer);
+  let w = 0;
+  progressTimer = setInterval(() => {
+    w = Math.min(w + 0.4, 100);
+    const fill = document.getElementById('progFill');
+    if (fill) fill.style.width = w + '%';
+    if (w >= 100) clearInterval(progressTimer);
+  }, 100);
+}
+
+// ── UI helpers
+function addMsg(text, role) {
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  div.innerHTML = `<div class="bubble">${text}</div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function addThinking() {
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg bot'; div.id = 'thinkingMsg';
+  div.innerHTML = `<div class="bubble" style="padding:10px 14px"><div class="thinking"><span></span><span></span><span></span></div></div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function removeThinking() {
+  const t = document.getElementById('thinkingMsg');
+  if (t) t.remove();
+}
+
+function addEvent(type, html) {
+  const log = document.getElementById('eventLog');
+  // 清除初始提示
+  const placeholder = log.querySelector('div[style]');
+  if (placeholder) placeholder.remove();
+
+  const item = document.createElement('div');
+  item.className = `event-item type-${type}`;
+  item.innerHTML = `<div class="event-dot"></div><div class="event-content">${html}</div>`;
+  log.appendChild(item);
+  setTimeout(() => item.classList.add('show'), 50);
+  log.scrollTop = log.scrollHeight;
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function setGuest() {
+  resetDemo();
+  // 访客模式：重置所有状态，完整经历授权+登录流程
+  // 登录弹窗里选择"跳过"，不激活会员权益
+  authorized = false; loggedIn = false; hasVip = false;
+  guestMode = true; // 标记为访客模式，登录弹窗显示访客样式
+  document.getElementById('btnGuest').style.background = 'rgba(255,255,255,0.15)';
+  document.getElementById('btnGuest').style.color = '#E5E7EB';
+  document.getElementById('btnMember').style.background = 'rgba(16,185,129,0.08)';
+  document.getElementById('btnMember').style.color = '#10B981';
+  addEvent('system', '<strong>已切换访客模式</strong> · 触发音乐后会经历授权和登录流程，在登录弹窗选择"跳过"体验无会员权益状态');
+  toast('访客模式已设置');
+}
+
+function setMember() {
+  resetDemo();
+  // 购机会员模式：重置状态，完整经历授权+登录流程
+  // 登录弹窗里显示购机权益，点登录自动激活
+  authorized = false; loggedIn = false; hasVip = false;
+  guestMode = false; // 标记为购机会员模式，登录弹窗显示购机权益
+  document.getElementById('btnMember').style.background = 'rgba(16,185,129,0.2)';
+  document.getElementById('btnMember').style.color = '#34D399';
+  document.getElementById('btnGuest').style.background = 'rgba(255,255,255,0.06)';
+  document.getElementById('btnGuest').style.color = '#9AA5B4';
+  addEvent('system', '<strong>已切换购机会员模式</strong> · 触发音乐后会经历授权和登录流程，登录时自动激活购机权益，VIP歌曲直接畅听');
+  toast('购机会员模式已设置');
+}
+
+function resetDemo() {
+  authorized = false; loggedIn = false; hasVip = false; guestMode = false; pendingIntent = null;
+  if (progressTimer) clearInterval(progressTimer);
+  document.getElementById('messages').innerHTML = '<div class="msg bot"><div class="bubble">嗨，我是小跃 👋 有什么需要帮你的？</div></div>';
+  document.getElementById('notifBar').classList.remove('show');
+  document.getElementById('eventLog').innerHTML = '<div style="font-size:11px;color:#3A4050;margin-bottom:8px;">— 等待操作 —</div>';
+  document.getElementById('authMask').classList.remove('show');
+  document.getElementById('loginMask').classList.remove('show');
+  document.getElementById('vipMask').classList.remove('show');
+}
+</script>
+</body>
+</html>
